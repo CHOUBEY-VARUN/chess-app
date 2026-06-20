@@ -1,19 +1,29 @@
-import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import express from "express";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const port = Number(process.env.PORT) || 3000;
+const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: clientUrl,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
 app.use(express.json());
 
-const port = Number(process.env.PORT) || 3000;
-
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.json({ message: "Backend running" });
 });
+
+app.use("/api/auth", authRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

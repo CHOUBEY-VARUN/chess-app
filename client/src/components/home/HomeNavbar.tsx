@@ -1,27 +1,29 @@
 import { Link } from "react-router-dom";
-
-type NavLink = {
-  label: string;
-  to: string;
-  className?: string;
-};
-
-const NAV_LINKS: readonly NavLink[] = [
-  { label: "Login", to: "/login" },
-  { label: "Register", to: "/register", className: "nav-button" },
-];
+import { useAuth } from "../../hooks/useAuth";
 
 function HomeNavbar() {
+  const { user, logoutUser } = useAuth();
+
   return (
     <nav className="navbar">
       <h2 className="logo">ChessRoom</h2>
 
       <div className="nav-links">
-        {NAV_LINKS.map((link) => (
-          <Link key={link.to} to={link.to} className={link.className}>
-            {link.label}
-          </Link>
-        ))}
+        {user ? (
+          <>
+            <Link to="/account">{user.username}</Link>
+            <button type="button" className="nav-button" onClick={logoutUser}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/register" className="nav-button">
+              Register
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );
