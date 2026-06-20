@@ -1,81 +1,281 @@
 .auth-page {
-  min-height: 100vh;
-  padding: 48px 24px;
+  min-height: 100svh;
+  overflow: hidden;
+  background: var(--color-cream-paper);
+  color: var(--color-ink-black);
+}
+
+.auth-layout {
   display: grid;
-  place-items: center;
-  background: #0f172a;
-  color: #f8fafc;
+  width: min(var(--page-max-width), calc(100% - 32px));
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 440px);
+  gap: 48px;
+  align-items: center;
+  margin: 0 auto;
+  padding: 76px 0 96px;
+}
+
+.auth-copy {
+  display: grid;
+  gap: 24px;
+}
+
+.auth-copy h1 {
+  max-width: 720px;
+  font-size: clamp(56px, 5.0625rem, var(--text-heading-lg));
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.auth-copy p:not(.eyebrow) {
+  max-width: 520px;
+  color: var(--color-stone-gray);
+  font-size: var(--text-subheading);
+}
+
+.auth-illustration {
+  width: min(100%, 520px);
+  margin-top: 8px;
 }
 
 .auth-card {
-  width: min(100%, 420px);
+  width: min(100%, 440px);
+  padding: 34px;
+  border: 1px solid rgba(44, 46, 42, 0.12);
+  border-radius: var(--radius-card);
+  background: var(--color-pure-white);
 }
 
-.auth-card h1 {
-  margin: 0 0 12px;
-  color: #f8fafc;
-  font-size: 40px;
+.auth-card h2 {
+  margin-bottom: 10px;
+  font-size: var(--text-heading-sm);
+  line-height: 1.12;
+  letter-spacing: 0;
 }
 
 .auth-card p {
-  color: #cbd5e1;
-}
-
-.auth-brand {
-  display: inline-block;
-  margin-bottom: 28px;
-  color: #38bdf8;
-  font-size: 24px;
-  font-weight: 700;
-  text-decoration: none;
+  color: var(--color-stone-gray);
+  font-size: var(--text-body-lg);
 }
 
 .auth-form {
-  margin-top: 28px;
   display: grid;
-  gap: 18px;
+  gap: 16px;
+  margin-top: 28px;
 }
 
 .auth-field {
   display: grid;
-  gap: 8px;
+  gap: 9px;
   text-align: left;
 }
 
+.auth-field label {
+  color: var(--color-ink-black);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .auth-field input {
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 12px 14px;
-  background: #020617;
-  color: #f8fafc;
+  min-height: 54px;
+  width: 100%;
+  border: 1px solid var(--color-hairline-mist);
+  border-radius: 20px;
+  padding: 0 18px;
+  background: rgba(224, 219, 206, 0.55);
+  color: var(--color-ink-black);
   font: inherit;
 }
 
 .auth-button {
-  border: 0;
-  border-radius: 8px;
-  padding: 14px 18px;
-  background: #38bdf8;
-  color: #020617;
-  font: inherit;
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--color-ink-black);
+  border-radius: var(--radius-pill);
+  background: var(--color-fresh-grass);
+  color: var(--color-ink-black);
   font-weight: 700;
-  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.auth-button::after {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-pure-white);
+  content: "";
+}
+
+.auth-button:hover:not(:disabled) {
+  transform: translateY(-2px);
 }
 
 .auth-error {
-  border: 1px solid #ef4444;
-  border-radius: 8px;
-  padding: 12px;
-  color: #fecaca;
-  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(255, 112, 93, 0.65);
+  border-radius: 22px;
+  padding: 12px 14px;
+  color: var(--color-ink-black);
+  background: rgba(255, 112, 93, 0.16);
+  font-weight: 600;
 }
 
 .auth-footer {
   margin-top: 24px;
+  color: var(--color-stone-gray);
   text-align: center;
 }
 
 .auth-footer a {
-  color: #38bdf8;
+  color: var(--color-ink-black);
   font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.account-page {
+  min-height: 100svh;
+  overflow: hidden;
+  background: var(--color-cream-paper);
+}
+
+.account-layout {
+  display: grid;
+  width: min(var(--page-max-width), calc(100% - 32px));
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 28px;
+  align-items: stretch;
+  margin: 0 auto;
+  padding: 76px 0 96px;
+}
+
+.account-hero,
+.account-panel {
+  border: 1px solid rgba(44, 46, 42, 0.12);
+  border-radius: var(--radius-card);
+  background: var(--color-pure-white);
+}
+
+.account-hero {
+  display: grid;
+  min-height: 560px;
+  align-content: space-between;
+  gap: 32px;
+  padding: 40px;
+}
+
+.account-hero__copy {
+  display: grid;
+  gap: 22px;
+}
+
+.account-hero h1 {
+  font-size: clamp(56px, 5.0625rem, var(--text-heading-lg));
+  line-height: 1;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.account-hero p:not(.eyebrow) {
+  color: var(--color-stone-gray);
+  font-size: var(--text-subheading);
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.account-panel {
+  display: grid;
+  gap: 22px;
+  padding: 28px;
+}
+
+.account-panel__header {
+  display: grid;
+  gap: 10px;
+}
+
+.account-panel h2 {
+  font-size: var(--text-heading-sm);
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.account-badge {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-ink-black);
+  border-radius: var(--radius-pill);
+  background: rgba(142, 212, 98, 0.26);
+  color: var(--color-ink-black);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.account-badge::before {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-fresh-grass);
+  content: "";
+}
+
+.account-illustration {
+  min-height: 300px;
+}
+
+@media (max-width: 900px) {
+  .auth-layout,
+  .account-layout {
+    grid-template-columns: 1fr;
+    padding-top: 54px;
+  }
+
+  .auth-card {
+    width: 100%;
+  }
+
+  .account-hero {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-layout,
+  .account-layout {
+    width: min(100% - 20px, var(--page-max-width));
+  }
+
+  .auth-copy h1,
+  .account-hero h1 {
+    font-size: 58px;
+  }
+
+  .auth-copy p:not(.eyebrow),
+  .account-hero p:not(.eyebrow) {
+    font-size: var(--text-body-lg);
+  }
+
+  .auth-card,
+  .account-hero,
+  .account-panel {
+    padding: 24px;
+    border-radius: 34px;
+  }
+
+  .account-actions {
+    flex-direction: column;
+  }
 }

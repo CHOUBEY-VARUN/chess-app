@@ -1,32 +1,38 @@
 import { Link } from "react-router-dom";
-import ChessBoardPreview from "./ChessBoardPreview";
+import { useAuth } from "../../hooks/useAuth";
+import ChessIllustration from "../shared/ChessIllustration";
 
 function HeroSection() {
+  const { user } = useAuth();
+
   return (
-    <main className="hero">
-      <section className="hero-content">
-        <p className="eyebrow">Real-Time Multiplayer Chess</p>
+    <main className="home-main">
+      <section className="hero">
+        <div className="hero-content">
+          <p className="eyebrow">Real-time chess rooms</p>
 
-        <h1>Play chess with friends in real time.</h1>
+          <h1>Play chess together, from anywhere.</h1>
 
-        <p className="hero-text">
-          Create a private chess room, invite another player, and play a legal
-          real-time game with a clean and focused interface.
-        </p>
+          <p className="hero-text">
+            Create a room, invite a friend, and settle into a focused live chess
+            game with a warm little corner of the internet around the board.
+          </p>
 
-        <div className="hero-actions">
-          <Link to="/register" className="primary-button">
-            Get Started
-          </Link>
+          <div className="hero-actions">
+            <Link to={user ? "/account" : "/register"} className="primary-button">
+              {user ? "Open account" : "Create a room"}
+            </Link>
 
-          <Link to="/login" className="secondary-button">
-            Login
-          </Link>
+            <Link to={user ? "/account" : "/login"} className="secondary-button">
+              {user ? "Player card" : "Login"}
+            </Link>
+          </div>
         </div>
-      </section>
 
-      <section className="hero-card" aria-label="Chess board preview">
-        <ChessBoardPreview />
+        <ChessIllustration
+          boardPosition="immortal"
+          className="hero-illustration"
+        />
       </section>
     </main>
   );

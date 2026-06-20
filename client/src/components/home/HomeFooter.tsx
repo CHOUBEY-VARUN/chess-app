@@ -1,7 +1,8 @@
 function HomeFooter() {
   return (
     <footer className="footer">
-      Built with React, TypeScript, Express, Socket.IO, and PostgreSQL.
+      <span>ChessRoom</span>
+      <p>Real-time chess rooms on a softer board.</p>
     </footer>
   );
 }
