@@ -58,7 +58,7 @@ function AuthForm({ submitLabel, error, footer, onSubmit }: AuthFormProps) {
           </p>
         )}
 
-        <button className="auth-button" disabled={isSubmitting}>
+        <button type="submit" className="auth-button" disabled={isSubmitting}>
           {isSubmitting ? "Please wait..." : submitLabel}
         </button>
       </form>
