@@ -4,6 +4,7 @@ import Account from "./pages/Account";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import LocalGame from "./pages/LocalGame";
 
 function App() {
   return (
@@ -17,6 +18,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Account />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/local-game"
+          element={
+            <ProtectedRoute>
+              <LocalGame />
             </ProtectedRoute>
           }
         />
