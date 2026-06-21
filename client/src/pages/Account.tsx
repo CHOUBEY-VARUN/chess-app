@@ -34,6 +34,9 @@ function Account() {
             >
               Logout
             </button>
+            <Link to="/local-game" className="pill-button pill-button--green">
+              Play
+            </Link>
           </div>
         </section>
 
