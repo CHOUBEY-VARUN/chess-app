@@ -1,0 +1,116 @@
+.lobby-page {
+  min-height: 100svh;
+  background: var(--color-cream-paper);
+  color: var(--color-ink-black);
+}
+
+.lobby-main {
+  display: grid;
+  width: min(var(--page-max-width), calc(100% - 32px));
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+  gap: 32px;
+  align-items: stretch;
+  margin: 0 auto;
+  padding: 76px 0 96px;
+}
+
+.lobby-hero,
+.lobby-card {
+  border: 1px solid rgba(44, 46, 42, 0.12);
+  border-radius: var(--radius-card);
+  background: var(--color-pure-white);
+}
+
+.lobby-hero {
+  display: grid;
+  min-height: 460px;
+  align-content: space-between;
+  gap: 28px;
+  padding: 40px;
+}
+
+.lobby-hero h1 {
+  font-size: clamp(56px, 5.0625rem, var(--text-heading-lg));
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.lobby-hero p:not(.eyebrow) {
+  max-width: 620px;
+  color: var(--color-stone-gray);
+  font-size: var(--text-subheading);
+}
+
+.lobby-card {
+  display: grid;
+  align-content: space-between;
+  gap: 24px;
+  padding: 32px;
+}
+
+.lobby-card__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.lobby-card h2 {
+  font-size: var(--text-heading-sm);
+  line-height: 1.12;
+}
+
+.lobby-card p {
+  color: var(--color-stone-gray);
+  font-size: var(--text-body-lg);
+}
+
+.lobby-error {
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 112, 93, 0.65);
+  border-radius: 22px;
+  color: var(--color-ink-black) !important;
+  background: rgba(255, 112, 93, 0.16);
+  font-weight: 600;
+}
+
+.lobby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .lobby-main {
+    grid-template-columns: 1fr;
+    padding-top: 54px;
+  }
+
+  .lobby-hero {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .lobby-main {
+    width: min(100% - 20px, var(--page-max-width));
+    padding: 40px 0 64px;
+  }
+
+  .lobby-hero,
+  .lobby-card {
+    padding: 24px;
+    border-radius: 34px;
+  }
+
+  .lobby-hero h1 {
+    font-size: 58px;
+  }
+
+  .lobby-hero p:not(.eyebrow),
+  .lobby-card p {
+    font-size: var(--text-body-lg);
+  }
+
+  .lobby-actions {
+    flex-direction: column;
+  }
+}
