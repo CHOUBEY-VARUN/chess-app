@@ -1,6 +1,7 @@
 import cors from "cors";
 import express, { type Express } from "express";
 import authRoutes from "./routes/authRoutes";
+import roomRoutes from "./routes/roomRoutes";
 
 export function createApp(): Express {
   const app = express();
@@ -20,6 +21,7 @@ export function createApp(): Express {
   });
 
   app.use("/api/auth", authRoutes);
+  app.use("/api/rooms", roomRoutes);
 
   return app;
 }

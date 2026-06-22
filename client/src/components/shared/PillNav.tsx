@@ -9,7 +9,10 @@ function PillNav({ className = "" }: PillNavProps) {
   const { user, logoutUser } = useAuth();
   const location = useLocation();
   const isHome = location.pathname === "/";
-  const wrapperClassName = ["pill-nav-wrap", className].filter(Boolean).join(" ");
+  const isLobby = location.pathname === "/lobby";
+  const wrapperClassName = ["pill-nav-wrap", className]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <header className={wrapperClassName}>
@@ -28,7 +31,15 @@ function PillNav({ className = "" }: PillNavProps) {
 
           {user ? (
             <>
-              <Link to="/account" className="pill-nav__link pill-nav__link--user">
+              {!isLobby && (
+                <Link to="/lobby" className="pill-nav__link">
+                  Lobby
+                </Link>
+              )}
+              <Link
+                to="/account"
+                className="pill-nav__link pill-nav__link--user"
+              >
                 {user.username}
               </Link>
               <button
