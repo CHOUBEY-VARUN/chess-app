@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS rooms (
   id SERIAL PRIMARY KEY,
   room_code VARCHAR(6) NOT NULL UNIQUE,
   host_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status VARCHAR(20) NOT NULL DEFAULT 'waiting',
+  opponent_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'waiting'
+    CHECK (status IN ('waiting', 'active', 'completed', 'cancelled')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
