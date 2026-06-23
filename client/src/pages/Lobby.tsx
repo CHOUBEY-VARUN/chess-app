@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createRoom } from "../api/roomApi";
+import { quickPlay } from "../api/roomApi";
 import PillNav from "../components/shared/PillNav";
 import { useAuth } from "../hooks/useAuth";
 import "./Lobby.css";
@@ -8,25 +8,29 @@ import "./Lobby.css";
 function Lobby() {
   const { token } = useAuth();
   const navigate = useNavigate();
-  const [isCreating, setIsCreating] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleCreateRoom() {
+  async function handlePlay() {
     if (!token) {
-      setError("You must be logged in to create a room.");
+      setError("You must be logged in to play.");
       return;
     }
 
-    setIsCreating(true);
+    setIsPlaying(true);
     setError(null);
 
     try {
-      const response = await createRoom(token);
-      navigate(`/rooms/${response.room.roomCode}`);
+      const response = await quickPlay(token);
+      navigate(`/rooms/${response.room.roomCode}`, {
+        state: { quickPlayAction: response.action },
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create room");
+      setError(
+        err instanceof Error ? err.message : "Failed to start quick play",
+      );
     } finally {
-      setIsCreating(false);
+      setIsPlaying(false);
     }
   }
 
@@ -39,17 +43,17 @@ function Lobby() {
           <p className="eyebrow">Online rooms</p>
           <h1>Lobby</h1>
           <p>
-            Create a private chess room, share the room code, and get ready for
-            the first real-time multiplayer layer.
+            Start quick play to create a waiting room or join the oldest
+            available opponent. Real-time gameplay will come in the next layer.
           </p>
         </section>
 
-        <section className="lobby-card" aria-labelledby="create-room-title">
+        <section className="lobby-card" aria-labelledby="quick-play-title">
           <div className="lobby-card__copy">
-            <h2 id="create-room-title">Create a room</h2>
+            <h2 id="quick-play-title">Quick play</h2>
             <p>
-              This creates a waiting room in PostgreSQL and gives you a room
-              code. Online play and Socket.IO will come later.
+              The backend will match you into a waiting room when one exists,
+              or create a new room code when you are first in line.
             </p>
           </div>
 
@@ -63,10 +67,10 @@ function Lobby() {
             <button
               type="button"
               className="primary-button"
-              disabled={isCreating}
-              onClick={handleCreateRoom}
+              disabled={isPlaying}
+              onClick={handlePlay}
             >
-              {isCreating ? "Creating..." : "Create Room"}
+              {isPlaying ? "Finding game..." : "Play"}
             </button>
 
             <Link to="/local-game" className="secondary-button">

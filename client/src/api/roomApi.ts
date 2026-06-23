@@ -4,13 +4,24 @@ export type Room = {
   id: number;
   roomCode: string;
   hostUserId: number;
-  status: string;
+  hostUsername: string;
+  opponentUserId: number | null;
+  opponentUsername: string | null;
+  status: "waiting" | "active" | "completed" | "cancelled";
   createdAt: string;
   updatedAt: string;
 };
 
 type CreateRoomResponse = {
   room: Room;
+};
+
+type RoomResponse = {
+  room: Room;
+};
+
+type QuickPlayResponse = RoomResponse & {
+  action: "created" | "joined";
 };
 
 async function parseResponse<T>(response: Response) {
@@ -32,4 +43,25 @@ export async function createRoom(token: string) {
   });
 
   return parseResponse<CreateRoomResponse>(response);
+}
+
+export async function quickPlay(token: string) {
+  const response = await fetch(`${API_BASE_URL}/api/rooms/quick-play`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse<QuickPlayResponse>(response);
+}
+
+export async function getRoomByCode(token: string, roomCode: string) {
+  const response = await fetch(`${API_BASE_URL}/api/rooms/${roomCode}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse<RoomResponse>(response);
 }
