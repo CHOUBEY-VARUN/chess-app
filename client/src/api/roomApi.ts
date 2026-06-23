@@ -56,6 +56,23 @@ export async function quickPlay(token: string) {
   return parseResponse<QuickPlayResponse>(response);
 }
 
+export async function joinRoomByCode(token: string, roomCode: string) {
+  const normalizedRoomCode = roomCode.trim().toUpperCase();
+  const encodedRoomCode = encodeURIComponent(normalizedRoomCode);
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/rooms/${encodedRoomCode}/join`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  return parseResponse<RoomResponse>(response);
+}
+
 export async function getRoomByCode(token: string, roomCode: string) {
   const response = await fetch(`${API_BASE_URL}/api/rooms/${roomCode}`, {
     headers: {

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { quickPlay } from "../api/roomApi";
+import { joinRoomByCode, quickPlay } from "../api/roomApi";
 import PillNav from "../components/shared/PillNav";
 import { useAuth } from "../hooks/useAuth";
 import "./Lobby.css";
@@ -9,16 +9,20 @@ function Lobby() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [quickPlayError, setQuickPlayError] = useState<string | null>(null);
+  const [joinCode, setJoinCode] = useState("");
+  const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   async function handlePlay() {
     if (!token) {
-      setError("You must be logged in to play.");
+      setQuickPlayError("You must be logged in to play.");
       return;
     }
 
     setIsPlaying(true);
-    setError(null);
+    setQuickPlayError(null);
+    setJoinError(null);
 
     try {
       const response = await quickPlay(token);
@@ -26,11 +30,40 @@ function Lobby() {
         state: { quickPlayAction: response.action },
       });
     } catch (err) {
-      setError(
+      setQuickPlayError(
         err instanceof Error ? err.message : "Failed to start quick play",
       );
     } finally {
       setIsPlaying(false);
+    }
+  }
+
+  async function handleJoinByCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const normalizedJoinCode = joinCode.trim().toUpperCase();
+
+    if (!token) {
+      setJoinError("You must be logged in to join a room.");
+      return;
+    }
+
+    if (!normalizedJoinCode) {
+      setJoinError("Enter a room code.");
+      return;
+    }
+
+    setIsJoining(true);
+    setJoinError(null);
+    setQuickPlayError(null);
+
+    try {
+      const response = await joinRoomByCode(token, normalizedJoinCode);
+      navigate(`/rooms/${response.room.roomCode}`);
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : "Failed to join room");
+    } finally {
+      setIsJoining(false);
     }
   }
 
@@ -57,9 +90,9 @@ function Lobby() {
             </p>
           </div>
 
-          {error && (
+          {quickPlayError && (
             <p className="lobby-error" role="alert">
-              {error}
+              {quickPlayError}
             </p>
           )}
 
@@ -77,6 +110,50 @@ function Lobby() {
               Play local
             </Link>
           </div>
+
+          <div className="lobby-divider" aria-hidden="true" />
+
+          <form
+            className="join-room-form"
+            aria-labelledby="join-room-title"
+            onSubmit={handleJoinByCode}
+          >
+            <div className="lobby-card__copy">
+              <h2 id="join-room-title">Join by code</h2>
+              <p>Enter a room code from a waiting room to join as opponent.</p>
+            </div>
+
+            <div className="join-room-form__row">
+              <div className="join-room-form__field">
+                <label htmlFor="join-room-code">Room code</label>
+                <input
+                  id="join-room-code"
+                  value={joinCode}
+                  maxLength={6}
+                  autoComplete="off"
+                  disabled={isJoining}
+                  placeholder="ABC123"
+                  onChange={(event) =>
+                    setJoinCode(event.target.value.toUpperCase())
+                  }
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={isJoining}
+              >
+                {isJoining ? "Joining..." : "Join"}
+              </button>
+            </div>
+
+            {joinError && (
+              <p className="lobby-error" role="alert">
+                {joinError}
+              </p>
+            )}
+          </form>
         </section>
       </main>
     </div>
