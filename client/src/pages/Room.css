@@ -14,8 +14,13 @@
   padding: 76px 0 96px;
 }
 
+.room-main--active {
+  align-items: start;
+}
+
 .room-hero,
-.room-card {
+.room-card,
+.room-game-card {
   border: 1px solid rgba(44, 46, 42, 0.12);
   border-radius: var(--radius-card);
   background: var(--color-pure-white);
@@ -47,6 +52,11 @@
   align-content: space-between;
   gap: 24px;
   padding: 32px;
+}
+
+.room-game-card {
+  grid-column: 1 / -1;
+  padding: 28px;
 }
 
 .room-code-badge {
@@ -89,6 +99,107 @@
   font-size: var(--text-body-lg);
 }
 
+.online-chess-game {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 28px;
+  align-items: start;
+}
+
+.online-chess-game__board-wrap {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+.online-chess-game__board-placeholder {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px dashed rgba(44, 46, 42, 0.3);
+  border-radius: 34px;
+  color: var(--color-stone-gray);
+  background: rgba(224, 219, 206, 0.45);
+  font-size: var(--text-body-lg);
+  font-weight: 700;
+}
+
+.online-chess-game__panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(44, 46, 42, 0.12);
+  border-radius: 34px;
+  background: rgba(224, 219, 206, 0.45);
+}
+
+.online-chess-game__status-block {
+  display: grid;
+  gap: 10px;
+}
+
+.online-chess-game__status-block h2 {
+  font-size: var(--text-heading-sm);
+  line-height: 1.12;
+}
+
+.online-chess-game__status-block p:not(.eyebrow),
+.online-chess-game__facts,
+.online-chess-game__message,
+.online-chess-game__error {
+  color: var(--color-stone-gray);
+  font-size: var(--text-body-lg);
+}
+
+.online-chess-game__facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.online-chess-game__message,
+.online-chess-game__error {
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: var(--color-pure-white);
+}
+
+.online-chess-game__error {
+  color: var(--color-ink-black);
+  background: rgba(255, 112, 93, 0.16);
+}
+
+.online-chess-game__connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-ink-black);
+  font-weight: 700;
+}
+
+.online-chess-game__connection::before {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-stone-gray);
+  content: "";
+}
+
+.online-chess-game__connection--connected::before {
+  background: var(--color-fresh-grass);
+}
+
+.online-chess-game__connection--connecting::before {
+  background: var(--color-sunshine-pop);
+}
+
+.online-chess-game__connection--disconnected::before {
+  background: var(--color-coral-pop);
+}
+
 @media (max-width: 900px) {
   .room-main {
     grid-template-columns: 1fr;
@@ -97,6 +208,14 @@
 
   .room-hero {
     min-height: auto;
+  }
+
+  .online-chess-game {
+    grid-template-columns: 1fr;
+  }
+
+  .online-chess-game__panel {
+    order: -1;
   }
 }
 
@@ -107,9 +226,14 @@
   }
 
   .room-hero,
-  .room-card {
+  .room-card,
+  .room-game-card {
     padding: 24px;
     border-radius: 34px;
+  }
+
+  .room-game-card {
+    padding: 14px;
   }
 
   .room-hero h1 {
@@ -119,5 +243,9 @@
   .room-hero p:not(.eyebrow),
   .room-card p {
     font-size: var(--text-body-lg);
+  }
+
+  .online-chess-game__panel {
+    padding: 18px;
   }
 }
