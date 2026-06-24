@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getRoomByCode, type Room as RoomData } from "../api/roomApi";
+import OnlineChessGame from "../components/game/OnlineChessGame";
 import PillNav from "../components/shared/PillNav";
 import { useAuth } from "../hooks/useAuth";
 import "./Room.css";
@@ -29,8 +30,9 @@ function Room() {
 
   useEffect(() => {
     let ignore = false;
+    let refreshTimeoutId: number | undefined;
 
-    async function loadRoom() {
+    async function loadRoom(showLoading: boolean) {
       if (!token) {
         setError("You must be logged in to view this room.");
         setIsLoading(false);
@@ -44,13 +46,22 @@ function Room() {
       }
 
       try {
-        setIsLoading(true);
+        if (showLoading) {
+          setIsLoading(true);
+        }
+
         setError(null);
 
         const response = await getRoomByCode(token, roomCode);
 
         if (!ignore) {
           setRoom(response.room);
+
+          if (response.room.status === "waiting") {
+            refreshTimeoutId = window.setTimeout(() => {
+              void loadRoom(false);
+            }, 3000);
+          }
         }
       } catch (err) {
         if (!ignore) {
@@ -64,10 +75,14 @@ function Room() {
       }
     }
 
-    loadRoom();
+    void loadRoom(true);
 
     return () => {
       ignore = true;
+
+      if (refreshTimeoutId) {
+        window.clearTimeout(refreshTimeoutId);
+      }
     };
   }, [roomCode, token]);
 
@@ -78,18 +93,31 @@ function Room() {
       : room && user?.id === room.opponentUserId
         ? "Opponent"
         : null;
+  const isAssignedPlayer = Boolean(
+    room &&
+      user &&
+      (user.id === room.hostUserId || user.id === room.opponentUserId),
+  );
+  const shouldShowOnlineGame = Boolean(
+    room && token && isAssignedPlayer && room.status === "active",
+  );
 
   return (
     <div className="room-page">
       <PillNav />
 
-      <main className="room-main">
+      <main
+        className={
+          shouldShowOnlineGame ? "room-main room-main--active" : "room-main"
+        }
+      >
         <section className="room-hero">
-          <p className="eyebrow">Waiting room</p>
+          <p className="eyebrow">Chess room</p>
           <h1>Room {displayRoomCode}</h1>
           <p>
             This room is loaded through the backend and only visible to assigned
-            players. Real-time presence and online gameplay will come later.
+            players. Once both players are present, the online board connects in
+            real time.
           </p>
         </section>
 
@@ -144,6 +172,12 @@ function Room() {
             Back to lobby
           </Link>
         </section>
+
+        {shouldShowOnlineGame && room && token && (
+          <section className="room-game-card">
+            <OnlineChessGame roomCode={room.roomCode} token={token} />
+          </section>
+        )}
       </main>
     </div>
   );
