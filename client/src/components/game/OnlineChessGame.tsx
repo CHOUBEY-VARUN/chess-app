@@ -11,6 +11,8 @@ type OnlineChessGameProps = {
   roomCode: string;
   token: string;
   className?: string;
+  onRedirectToRoom?: (roomCode: string) => void;
+  onRedirectToLobby?: (message: string) => void;
 };
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected";
@@ -18,6 +20,12 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected";
 const COLOR_LABELS: Record<PlayerColor, string> = {
   white: "White",
   black: "Black",
+};
+
+const RESULT_LABELS: Record<NonNullable<OnlineGameState["result"]>, string> = {
+  white_win: "White wins",
+  black_win: "Black wins",
+  draw: "Draw",
 };
 
 const PIECE_COLOR_PREFIX: Record<PlayerColor, "w" | "b"> = {
@@ -38,10 +46,24 @@ function getConnectionLabel(status: ConnectionStatus) {
   }
 }
 
+function getPostGameTitle(gameState: OnlineGameState) {
+  if (gameState.winnerUsername) {
+    return `${gameState.winnerUsername} wins`;
+  }
+
+  if (gameState.result) {
+    return RESULT_LABELS[gameState.result];
+  }
+
+  return "Game over";
+}
+
 function OnlineChessGame({
   roomCode,
   token,
   className = "",
+  onRedirectToRoom,
+  onRedirectToLobby,
 }: OnlineChessGameProps) {
   const socketRef = useRef<OnlineChessSocket | null>(null);
   const [gameState, setGameState] = useState<OnlineGameState | null>(null);
@@ -79,6 +101,34 @@ function OnlineChessGame({
       setMoveError(null);
     });
 
+    socket.on("gameOver", (state) => {
+      setGameState(state);
+      setMoveError(null);
+    });
+
+    socket.on("rematchUpdated", (state) => {
+      setGameState(state);
+      setMoveError(null);
+    });
+
+    socket.on("rematchStarted", (state) => {
+      setGameState(state);
+      setConnectionError(null);
+      setMoveError(null);
+    });
+
+    socket.on("roomClosed", (payload) => {
+      setConnectionError(payload.message);
+    });
+
+    socket.on("redirectToRoom", (payload) => {
+      onRedirectToRoom?.(payload.roomCode);
+    });
+
+    socket.on("redirectToLobby", (payload) => {
+      onRedirectToLobby?.(payload.message);
+    });
+
     socket.on("roomError", (error) => {
       setConnectionError(error.message);
     });
@@ -93,7 +143,7 @@ function OnlineChessGame({
       socketRef.current = null;
       socket.disconnect();
     };
-  }, [roomCode, token]);
+  }, [onRedirectToLobby, onRedirectToRoom, roomCode, token]);
 
   const isMyTurn = Boolean(
     gameState && gameState.turn === gameState.playerColor,
@@ -171,6 +221,18 @@ function OnlineChessGame({
     [canInteract, gameState, isMyTurn, roomCode],
   );
 
+  function handleRequestRematch() {
+    socketRef.current?.emit("requestRematch", { roomCode });
+  }
+
+  function handleCancelRematch() {
+    socketRef.current?.emit("cancelRematch", { roomCode });
+  }
+
+  function handleStartNewGame() {
+    socketRef.current?.emit("startNewGame", { roomCode });
+  }
+
   const rootClassName = ["online-chess-game", className]
     .filter(Boolean)
     .join(" ");
@@ -180,6 +242,10 @@ function OnlineChessGame({
   const lastMoveText = gameState?.lastMove
     ? `${COLOR_LABELS[gameState.lastMove.color]} played ${gameState.lastMove.san}`
     : null;
+
+  const showPostGameActions = Boolean(
+    gameState?.isGameOver && gameState.canStartNewGame,
+  );
 
   return (
     <section className={rootClassName} aria-label="Online chess game">
@@ -209,6 +275,9 @@ function OnlineChessGame({
             {gameState ? COLOR_LABELS[gameState.playerColor] : "Assigning"}
           </li>
           <li>
+            Game: {gameState ? `#${gameState.gameNumber}` : "Preparing"}
+          </li>
+          <li>
             Connection:{" "}
             <span
               className={`online-chess-game__connection online-chess-game__connection--${connectionStatus}`}
@@ -235,6 +304,61 @@ function OnlineChessGame({
           <p className="online-chess-game__error" role="alert">
             {moveError}
           </p>
+        )}
+
+        {showPostGameActions && gameState && (
+          <div className="online-chess-game__post-game">
+            <div className="online-chess-game__post-game-copy">
+              <p className="eyebrow">Game over</p>
+              <h3>{getPostGameTitle(gameState)}</h3>
+              <p>
+                Request a rematch to keep this room. Both players must agree,
+                and colors flip for the next game.
+              </p>
+            </div>
+
+            {gameState.rematch.requestedByOpponent &&
+              !gameState.rematch.requestedByYou && (
+                <p className="online-chess-game__message">
+                  Your opponent requested a rematch.
+                </p>
+              )}
+
+            {gameState.rematch.requestedByYou &&
+              !gameState.rematch.bothRequested && (
+                <p className="online-chess-game__message">
+                  Waiting for your opponent to accept the rematch.
+                </p>
+              )}
+
+            <div className="online-chess-game__post-game-actions">
+              {gameState.rematch.requestedByYou ? (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={handleCancelRematch}
+                >
+                  Cancel rematch
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={handleRequestRematch}
+                >
+                  Rematch
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleStartNewGame}
+              >
+                New game
+              </button>
+            </div>
+          </div>
         )}
       </aside>
     </section>

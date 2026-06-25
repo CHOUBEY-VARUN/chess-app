@@ -200,6 +200,36 @@
   background: var(--color-coral-pop);
 }
 
+.online-chess-game__post-game {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(44, 46, 42, 0.12);
+  border-radius: 28px;
+  background: var(--color-pure-white);
+}
+
+.online-chess-game__post-game-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.online-chess-game__post-game-copy h3 {
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.online-chess-game__post-game-copy p:not(.eyebrow) {
+  color: var(--color-stone-gray);
+  font-size: var(--text-body-sm);
+}
+
+.online-chess-game__post-game-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 @media (max-width: 900px) {
   .room-main {
     grid-template-columns: 1fr;
@@ -247,5 +277,9 @@
 
   .online-chess-game__panel {
     padding: 18px;
+  }
+
+  .online-chess-game__post-game-actions {
+    flex-direction: column;
   }
 }

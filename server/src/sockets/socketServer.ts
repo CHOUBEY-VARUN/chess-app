@@ -1,6 +1,7 @@
 import type { Server as HttpServer } from "node:http";
 import jwt from "jsonwebtoken";
 import { Server } from "socket.io";
+import { env } from "../config/env";
 import { registerGameSocketHandlers } from "../sockets/gameSocketHandler";
 import type { AuthTokenPayload } from "../types/auth";
 import type {
@@ -17,8 +18,6 @@ function getHandshakeToken(socket: AuthenticatedSocket) {
 }
 
 export function configureSocketServer(httpServer: HttpServer) {
-  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-
   const io = new Server<
     ClientToServerEvents,
     ServerToClientEvents,
@@ -26,7 +25,7 @@ export function configureSocketServer(httpServer: HttpServer) {
     AuthenticatedSocketData
   >(httpServer, {
     cors: {
-      origin: clientUrl,
+      origin: env.clientUrl,
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type", "Authorization"],
     },
@@ -34,20 +33,14 @@ export function configureSocketServer(httpServer: HttpServer) {
 
   io.use((socket, next) => {
     const token = getHandshakeToken(socket);
-    const jwtSecret = process.env.JWT_SECRET;
 
     if (!token) {
       next(new Error("Authentication required"));
       return;
     }
 
-    if (!jwtSecret) {
-      next(new Error("JWT secret is not configured"));
-      return;
-    }
-
     try {
-      const decoded = jwt.verify(token, jwtSecret) as AuthTokenPayload;
+      const decoded = jwt.verify(token, env.jwtSecret) as AuthTokenPayload;
 
       socket.data.user = {
         id: decoded.userId,

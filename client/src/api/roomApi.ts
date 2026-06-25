@@ -8,6 +8,9 @@ export type Room = {
   opponentUserId: number | null;
   opponentUsername: string | null;
   status: "waiting" | "active" | "completed" | "cancelled";
+  closedReason: "game_over" | "new_game" | "cancelled" | null;
+  closedByUserId: number | null;
+  closedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getRoomByCode, type Room as RoomData } from "../api/roomApi";
 import OnlineChessGame from "../components/game/OnlineChessGame";
 import PillNav from "../components/shared/PillNav";
@@ -21,8 +21,25 @@ function getRoomStatusLabel(status: RoomData["status"]) {
   }
 }
 
+function getClosedRoomMessage(room: RoomData) {
+  if (room.closedReason === "new_game") {
+    return "This room was closed because a player started a new game.";
+  }
+
+  if (room.closedReason === "game_over") {
+    return "This game has ended. You can request a rematch or start a new game.";
+  }
+
+  if (room.closedReason === "cancelled") {
+    return "This room was cancelled.";
+  }
+
+  return null;
+}
+
 function Room() {
   const { roomCode } = useParams<{ roomCode: string }>();
+  const navigate = useNavigate();
   const { token, user } = useAuth();
   const [room, setRoom] = useState<RoomData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,6 +103,26 @@ function Room() {
     };
   }, [roomCode, token]);
 
+  const handleRedirectToRoom = useCallback(
+    (nextRoomCode: string) => {
+      navigate(`/rooms/${nextRoomCode}`, {
+        replace: true,
+        state: { notice: "New game room created." },
+      });
+    },
+    [navigate],
+  );
+
+  const handleRedirectToLobby = useCallback(
+    (message: string) => {
+      navigate("/lobby", {
+        replace: true,
+        state: { notice: message },
+      });
+    },
+    [navigate],
+  );
+
   const displayRoomCode = room?.roomCode ?? roomCode ?? "unknown";
   const playerRole =
     room && user?.id === room.hostUserId
@@ -98,9 +135,16 @@ function Room() {
       user &&
       (user.id === room.hostUserId || user.id === room.opponentUserId),
   );
-  const shouldShowOnlineGame = Boolean(
-    room && token && isAssignedPlayer && room.status === "active",
+  const canShowCompletedPostGame = Boolean(
+    room?.status === "completed" && room.closedReason === "game_over",
   );
+  const shouldShowOnlineGame = Boolean(
+    room &&
+      token &&
+      isAssignedPlayer &&
+      (room.status === "active" || canShowCompletedPostGame),
+  );
+  const closedRoomMessage = room ? getClosedRoomMessage(room) : null;
 
   return (
     <div className="room-page">
@@ -164,6 +208,7 @@ function Room() {
                     ? "Both players are assigned to this room."
                     : "Waiting for quick play to match an opponent."}
                 </p>
+                {closedRoomMessage && <p>{closedRoomMessage}</p>}
               </div>
             </>
           )}
@@ -175,7 +220,13 @@ function Room() {
 
         {shouldShowOnlineGame && room && token && (
           <section className="room-game-card">
-            <OnlineChessGame roomCode={room.roomCode} token={token} />
+            <OnlineChessGame
+              key={room.roomCode}
+              roomCode={room.roomCode}
+              token={token}
+              onRedirectToRoom={handleRedirectToRoom}
+              onRedirectToLobby={handleRedirectToLobby}
+            />
           </section>
         )}
       </main>

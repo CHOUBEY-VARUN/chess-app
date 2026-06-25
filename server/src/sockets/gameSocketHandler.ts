@@ -1,9 +1,12 @@
 import type { Server } from "socket.io";
 import {
+  cancelRematch,
   getOnlineGameState,
   joinOnlineGame,
   makeOnlineMove,
   OnlineGameServiceError,
+  requestRematch,
+  startNewGameFromRoom,
 } from "../services/onlineGameService";
 import { RoomServiceError } from "../services/roomService";
 import type {
@@ -14,6 +17,7 @@ import type {
   JoinRoomPayload,
   MakeMovePayload,
   PromotionPiece,
+  RoomActionPayload,
   ServerToClientEvents,
 } from "../types/socket";
 
@@ -35,6 +39,16 @@ function isPromotionPiece(value: string): value is PromotionPiece {
 }
 
 function parseJoinRoomPayload(payload: unknown): JoinRoomPayload {
+  if (!isRecord(payload) || typeof payload.roomCode !== "string") {
+    throw new OnlineGameServiceError("Room code is required.");
+  }
+
+  return {
+    roomCode: payload.roomCode,
+  };
+}
+
+function parseRoomActionPayload(payload: unknown): RoomActionPayload {
   if (!isRecord(payload) || typeof payload.roomCode !== "string") {
     throw new OnlineGameServiceError("Room code is required.");
   }
@@ -104,9 +118,56 @@ async function emitGameStateToRoom(io: OnlineChessServer, roomCode: string) {
         );
 
         playerSocket.emit("gameState", state);
+
+        if (state.isGameOver) {
+          playerSocket.emit("gameOver", state);
+        }
       } catch (error) {
         playerSocket.emit("roomError", {
           message: getErrorMessage(error, "Failed to sync game state."),
+        });
+      }
+    }),
+  );
+}
+
+async function emitRematchUpdated(io: OnlineChessServer, roomCode: string) {
+  const sockets = await io.in(roomCode).fetchSockets();
+
+  await Promise.all(
+    sockets.map(async (playerSocket) => {
+      try {
+        const state = await getOnlineGameState(
+          roomCode,
+          playerSocket.data.user.id,
+        );
+
+        playerSocket.emit("rematchUpdated", state);
+      } catch (error) {
+        playerSocket.emit("roomError", {
+          message: getErrorMessage(error, "Failed to sync rematch state."),
+        });
+      }
+    }),
+  );
+}
+
+async function emitRematchStarted(io: OnlineChessServer, roomCode: string) {
+  const sockets = await io.in(roomCode).fetchSockets();
+
+  await Promise.all(
+    sockets.map(async (playerSocket) => {
+      try {
+        const state = await getOnlineGameState(
+          roomCode,
+          playerSocket.data.user.id,
+        );
+
+        playerSocket.emit("rematchStarted", state);
+        playerSocket.emit("gameState", state);
+      } catch (error) {
+        playerSocket.emit("roomError", {
+          message: getErrorMessage(error, "Failed to start rematch."),
         });
       }
     }),
@@ -124,6 +185,10 @@ export function registerGameSocketHandlers(
 
       await socket.join(state.roomCode);
       socket.emit("gameState", state);
+
+      if (state.isGameOver) {
+        socket.emit("gameOver", state);
+      }
     } catch (error) {
       socket.emit("roomError", {
         message: getErrorMessage(error, "Failed to join room."),
@@ -140,6 +205,80 @@ export function registerGameSocketHandlers(
     } catch (error) {
       socket.emit("moveRejected", {
         message: getErrorMessage(error, "Move rejected."),
+      });
+    }
+  });
+
+  socket.on("requestRematch", async (payload: unknown) => {
+    try {
+      const { roomCode } = parseRoomActionPayload(payload);
+      const result = await requestRematch(roomCode, socket.data.user.id);
+
+      if (result.started) {
+        await emitRematchStarted(io, result.roomCode);
+      } else {
+        await emitRematchUpdated(io, result.roomCode);
+      }
+    } catch (error) {
+      socket.emit("roomError", {
+        message: getErrorMessage(error, "Failed to request rematch."),
+      });
+    }
+  });
+
+  socket.on("cancelRematch", async (payload: unknown) => {
+    try {
+      const { roomCode } = parseRoomActionPayload(payload);
+      const updatedRoomCode = await cancelRematch(
+        roomCode,
+        socket.data.user.id,
+      );
+
+      await emitRematchUpdated(io, updatedRoomCode);
+    } catch (error) {
+      socket.emit("roomError", {
+        message: getErrorMessage(error, "Failed to cancel rematch."),
+      });
+    }
+  });
+
+  socket.on("startNewGame", async (payload: unknown) => {
+    try {
+      const { roomCode } = parseRoomActionPayload(payload);
+      const result = await startNewGameFromRoom(
+        roomCode,
+        socket.data.user.id,
+      );
+      const sockets = await io.in(result.oldRoomCode).fetchSockets();
+
+      await Promise.all(
+        sockets.map(async (playerSocket) => {
+          playerSocket.emit("roomClosed", {
+            roomCode: result.oldRoomCode,
+            reason: "new_game",
+            message:
+              "This room was closed because a player started a new game.",
+          });
+
+          if (playerSocket.data.user.id === result.requesterUserId) {
+            playerSocket.emit("redirectToRoom", {
+              roomCode: result.newRoomCode,
+              reason: "new_game",
+            });
+          } else if (playerSocket.data.user.id === result.opponentUserId) {
+            playerSocket.emit("redirectToLobby", {
+              reason: "opponent_started_new_game",
+              message:
+                "Your opponent started a new game. You can join or start another room.",
+            });
+          }
+
+          await playerSocket.leave(result.oldRoomCode);
+        }),
+      );
+    } catch (error) {
+      socket.emit("roomError", {
+        message: getErrorMessage(error, "Failed to start a new game."),
       });
     }
   });
