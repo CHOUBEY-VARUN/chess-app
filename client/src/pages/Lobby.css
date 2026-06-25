@@ -72,6 +72,15 @@
   font-weight: 600;
 }
 
+.lobby-notice {
+  padding: 12px 14px;
+  border: 1px solid rgba(142, 212, 98, 0.75);
+  border-radius: 22px;
+  color: var(--color-ink-black) !important;
+  background: rgba(142, 212, 98, 0.18);
+  font-weight: 600;
+}
+
 .lobby-actions {
   display: flex;
   flex-wrap: wrap;

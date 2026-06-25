@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../db";
 import { verifyToken } from "../middleware/verifyToken";
+import { env } from "../config/env";
 
 const router = Router();
 
@@ -18,7 +19,7 @@ function createToken(user: { id: number; username: string }) {
       userId: user.id,
       username: user.username,
     },
-    process.env.JWT_SECRET as string,
+    env.jwtSecret,
     {
       expiresIn: "1h",
     },

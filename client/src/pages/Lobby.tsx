@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { joinRoomByCode, quickPlay } from "../api/roomApi";
 import PillNav from "../components/shared/PillNav";
 import { useAuth } from "../hooks/useAuth";
@@ -8,6 +8,9 @@ import "./Lobby.css";
 function Lobby() {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const notice =
+    (location.state as { notice?: string } | null)?.notice ?? null;
   const [isPlaying, setIsPlaying] = useState(false);
   const [quickPlayError, setQuickPlayError] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState("");
@@ -77,11 +80,18 @@ function Lobby() {
           <h1>Lobby</h1>
           <p>
             Start quick play to create a waiting room or join the oldest
-            available opponent. Real-time gameplay will come in the next layer.
+            available opponent. When both players arrive, the live board opens
+            automatically.
           </p>
         </section>
 
         <section className="lobby-card" aria-labelledby="quick-play-title">
+          {notice && (
+            <p className="lobby-notice" role="status">
+              {notice}
+            </p>
+          )}
+
           <div className="lobby-card__copy">
             <h2 id="quick-play-title">Quick play</h2>
             <p>

@@ -1,15 +1,16 @@
 import cors from "cors";
 import express, { type Express } from "express";
+import { env } from "./config/env";
 import authRoutes from "./routes/authRoutes";
 import roomRoutes from "./routes/roomRoutes";
 
 export function createApp(): Express {
   const app = express();
-  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 
   app.use(
     cors({
-      origin: clientUrl,
+      origin: env.clientUrl,
+      methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type", "Authorization"],
     }),
   );

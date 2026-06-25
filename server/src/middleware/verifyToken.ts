@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
 import type { AuthTokenPayload } from "../types/auth";
 
 export function verifyToken(req: Request, res: Response, next: NextFunction) {
@@ -13,10 +14,7 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string,
-    ) as AuthTokenPayload;
+    const decoded = jwt.verify(token, env.jwtSecret) as AuthTokenPayload;
 
     req.user = {
       id: decoded.userId,
