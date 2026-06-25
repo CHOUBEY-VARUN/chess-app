@@ -235,6 +235,14 @@ For a hosted Neon database, set `DATABASE_URL` to the Neon connection string bef
 
 Detailed deployment notes are in [docs/deployment.md](docs/deployment.md).
 
+## Testing Strategy
+
+The project currently includes a documented testing strategy covering authentication, room creation, manual room joining, real-time chess gameplay, post-game flows, frontend routing, and deployment smoke testing.
+
+Automated tests are planned as a future improvement. The highest-priority future tests are backend API tests, Socket.IO integration tests, and Playwright end-to-end tests for the two-player chess flow.
+
+See [`TESTING.md`](./TESTING.md) for the full testing checklist and planned automated test roadmap.
+
 ## Known Limitations
 
 - No automated test suite yet.
