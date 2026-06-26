@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "build": "tsc -b && vite build",
+  "lint": "eslint .",
+  "typecheck": "tsc -b",
+  "preview": "vite preview"
+},
   "dependencies": {
     "chess.js": "^1.4.0",
     "react": "^19.2.6",
