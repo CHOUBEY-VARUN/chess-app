@@ -1,8 +1,11 @@
 # Real-Time Chess Room
 
-Full-stack multiplayer chess room app where authenticated users can create or join private rooms and play legal chess games in real time.
+[![CI](https://github.com/CHOUBEY-VARUN/chess-app/actions/workflows/ci.yml/badge.svg)](https://github.com/CHOUBEY-VARUN/chess-app/actions/workflows/ci.yml) 
+[![CodeQL](https://github.com/CHOUBEY-VARUN/chess-app/actions/workflows/codeql.yml/badge.svg)](https://github.com/CHOUBEY-VARUN/chess-app/actions/workflows/codeql.yml) 
 
-Real-Time Chess Room is a full-stack multiplayer chess app where authenticated users can create or join private rooms and play legal chess games in real time. The backend is authoritative for game state and validates room access, player color, turn order, and legal chess moves before broadcasting updates through Socket.IO.
+Full-stack multiplayer chess room app where authenticated users can create or join private rooms and play legal chess games in real time. 
+
+The backend is authoritative for online gameplay. It validates room access, player color, turn order, square format, piece ownership, and legal chess moves before persisting game state and broadcasting updates through Socket.IO.
 
 
 ## Status
@@ -45,6 +48,19 @@ Note: The backend is hosted on Render's free tier, so the first request may take
 | Database | PostgreSQL, Neon |
 | Auth | JWT, bcrypt |
 | Deployment | Vercel frontend, Render backend, Neon database |
+
+## Engineering Quality 
+
+This project includes a GitHub Actions-based quality workflow to keep the frontend and backend production-ready. 
+- CI workflow runs on pushes and pull requests to `main`.
+- Frontend validation includes dependency installation, linting, TypeScript checking, and production build verification.
+- Backend validation includes dependency installation, TypeScript checking, and production build verification.
+- CodeQL security scanning is configured for JavaScript/TypeScript analysis.
+- Dependency Review checks pull requests for vulnerable dependency changes.
+- Dependabot is configured for weekly updates across frontend npm packages, backend npm packages, and GitHub Actions.
+- Package installation uses `npm ci` in CI for clean, lockfile-based installs.
+
+These workflows help catch broken builds, TypeScript errors, dependency issues, and security concerns before changes are merged.
 
 ## Architecture
 
@@ -225,6 +241,27 @@ npm run db:setup
 
 For a hosted Neon database, set `DATABASE_URL` to the Neon connection string before running the same command.
 
+## Local Validation
+
+Before opening a pull request or deploying changes, run the same core checks locally.
+
+## Frontend
+
+```bash
+cd client
+npm run lint
+npm run typecheck
+npm run build
+Backend
+cd server
+npm run lint
+npm run typecheck
+npm run build
+```
+
+The GitHub Actions CI workflow runs these checks automatically for both applications.
+
+
 ## Deployment Overview
 
 - Frontend: Vercel project with root directory `client`, build command `npm run build`, output directory `dist`, and `VITE_API_BASE_URL=https://chess-app-5yff.onrender.com`.
@@ -235,37 +272,38 @@ For a hosted Neon database, set `DATABASE_URL` to the Neon connection string bef
 
 Detailed deployment notes are in [docs/deployment.md](docs/deployment.md).
 
-## Testing Strategy
+## Testing Strategy 
 
-The project currently includes a documented testing strategy covering authentication, room creation, manual room joining, real-time chess gameplay, post-game flows, frontend routing, and deployment smoke testing.
+The project currently includes a documented manual testing strategy covering authentication, room creation, manual room joining, quick play, real-time chess gameplay, post-game rematch/new-game flows, frontend routing, and deployment smoke testing. 
 
-Automated tests are planned as a future improvement. The highest-priority future tests are backend API tests, Socket.IO integration tests, and Playwright end-to-end tests for the two-player chess flow.
+The repository also includes CI validation through GitHub Actions. On pushes and pull requests, the workflow validates the frontend and backend with dependency installation, linting or TypeScript checks, and production builds. 
 
-See [`TESTING.md`](./TESTING.md) for the full testing checklist and planned automated test roadmap.
+Automated product tests are planned as a future improvement. The highest-priority future tests are: 
+- Backend API tests for authentication, room creation, room joining, rematch, and new-game behavior.
+- Socket.IO integration tests for two-player room synchronization and move validation.
+- Playwright end-to-end tests for the complete two-browser chess flow.
 
-## Known Limitations
+See [`TESTING.md`](./TESTING.md) for the full manual testing checklist and planned automated test roadmap.
 
-- No automated test suite yet.
-- No move history or captured-pieces panel yet.
-- No chess clocks or time controls yet.
-- No resign or draw-offer flow yet.
-- Pawn promotion currently defaults to queen in the online game.
+## Known Limitations 
+- No automated product test suite yet; current coverage is manual testing plus CI validation.
+- No move history or captured-pieces panel yet. - No chess clocks or time controls yet.
+- No resign or draw-offer flow yet. - Pawn promotion currently defaults to queen in the online game.
 - Socket.IO presence is process-local; multi-instance scaling would need sticky sessions or a shared adapter such as Redis.
 - Render's free tier can introduce cold-start latency after inactivity.
 
-## Future Improvements
+## Future Improvements 
 
 - Add focused backend tests for auth, room joins, move validation, rematches, and new-game behavior.
-- Add frontend integration tests for protected routes and live-room flows.
-- Add move history, captured pieces, and PGN export.
-- Add resign, draw offer, and promotion-piece selection.
-- Add chess clocks and configurable time controls.
-- Add Redis-backed Socket.IO adapter support for horizontal scaling.
-- Add stronger production hardening such as rate limiting and structured request logging.
+- Add Socket.IO integration tests for two-player synchronization.
+- Add Playwright end-to-end tests for login, room creation, joining, gameplay, rematch, and new-game flows.
+- Add move history, captured pieces, and PGN export. - Add resign, draw offer, and promotion-piece selection.
+- Add chess clocks and configurable time controls. - Add Redis-backed Socket.IO adapter support for horizontal scaling.
+- Add stronger production hardening such as rate limiting, structured request logging, and centralized error handling.
 
 ## Resume Bullet
 
-Built and deployed a full-stack real-time multiplayer chess app with React, TypeScript, Express, Socket.IO, PostgreSQL, and JWT authentication, supporting private rooms, protected routes, legal server-validated moves, and live board synchronization.
+Built and deployed a full-stack real-time multiplayer chess app with React, TypeScript, Express, Socket.IO, PostgreSQL, and JWT authentication, supporting private rooms, protected routes, server-authoritative legal move validation, live board synchronization, rematch/new-game flows, and GitHub Actions CI with CodeQL and dependency checks.
 
 ## What I Learned / Technical Highlights
 
@@ -275,3 +313,4 @@ Built and deployed a full-stack real-time multiplayer chess app with React, Type
 - Used database transactions and row locking around room joins to avoid two players claiming the same waiting room.
 - Coordinated REST APIs for room lifecycle with Socket.IO events for low-latency board synchronization.
 - Deployed a full-stack TypeScript app across Vercel, Render, and Neon, including SPA routing and cross-origin configuration.
+- Added GitHub Actions CI to validate both frontend and backend changes before merge. - Configured CodeQL and Dependency Review to surface security and dependency issues in pull requests. - Configured Dependabot for weekly dependency updates across client, server, and GitHub Actions.
