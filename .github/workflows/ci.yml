@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate ${{ matrix.app }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: client
+            working-directory: client
+          - app: server
+            working-directory: server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.working-directory }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.working-directory }}
+        run: npm ci
+
+      - name: Lint
+        working-directory: ${{ matrix.working-directory }}
+        run: npm run lint
+
+      - name: Type-check
+        working-directory: ${{ matrix.working-directory }}
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: ${{ matrix.working-directory }}
+        run: npm run build
+
+      - name: Test
+        working-directory: ${{ matrix.working-directory }}
+        run: npm run test --if-present
