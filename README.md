@@ -14,6 +14,8 @@ Deployed MVP. Core authentication, room creation/joining, real-time gameplay, re
 
 ## Live Demo
 
+https://github.com/user-attachments/assets/7d1d1406-ba97-44a3-9010-4fa8fc21d772
+
 - Frontend: https://chess-app-rho-beryl.vercel.app
 - Backend health check: https://chess-app-5yff.onrender.com
 
