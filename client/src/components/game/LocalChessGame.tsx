@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Chess } from "chess.js";
+import { useCallback, useMemo, useState } from "react";
+import { Chess, type Square } from "chess.js";
 import { Chessboard, type ChessboardOptions } from "react-chessboard";
 
 type LocalChessGameProps = {
@@ -44,6 +44,7 @@ function getGameStatus(game: Chess) {
 
 function LocalChessGame({ className = "", initialFen }: LocalChessGameProps) {
   const [game, setGame] = useState(() => createGame(initialFen));
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [lastMove, setLastMove] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
 
@@ -53,9 +54,72 @@ function LocalChessGame({ className = "", initialFen }: LocalChessGameProps) {
 
   function resetGame() {
     setGame(createGame(initialFen));
+    setSelectedSquare(null);
     setLastMove(null);
     setMoveError(null);
   }
+
+  const legalDestinations = useMemo(() => {
+    if (!selectedSquare || isGameOver) {
+      return [];
+    }
+
+    const currentPosition = new Chess(game.fen());
+    return currentPosition
+      .moves({ square: selectedSquare, verbose: true })
+      .map((move) => move.to);
+  }, [game, isGameOver, selectedSquare]);
+
+  const applyMove = useCallback((sourceSquare: string, targetSquare: string) => {
+    if (isGameOver) {
+      return false;
+    }
+
+    const piece = game.get(sourceSquare as Square);
+    if (!piece || piece.color !== game.turn()) {
+      setMoveError(`${currentTurn} to move.`);
+      return false;
+    }
+
+    const nextGame = new Chess(game.fen());
+
+    try {
+      const move = nextGame.move({
+        from: sourceSquare as Square,
+        to: targetSquare as Square,
+        promotion: "q",
+      });
+
+      setGame(nextGame);
+      setSelectedSquare(null);
+      setLastMove(`${TURN_LABELS[move.color]} played ${move.san}`);
+      setMoveError(null);
+      return true;
+    } catch {
+      setMoveError("Illegal move. Try a legal chess move.");
+      return false;
+    }
+  }, [currentTurn, game, isGameOver]);
+
+  const handleSquareClick = useCallback(({ piece, square }: Parameters<NonNullable<ChessboardOptions["onSquareClick"]>>[0]) => {
+    if (isGameOver) {
+      setSelectedSquare(null);
+      return;
+    }
+
+    if (selectedSquare && legalDestinations.includes(square as Square)) {
+      applyMove(selectedSquare, square);
+      return;
+    }
+
+    if (piece && piece.pieceType[0] === game.turn()) {
+      setSelectedSquare(square === selectedSquare ? null : square as Square);
+      setMoveError(null);
+      return;
+    }
+
+    setSelectedSquare(null);
+  }, [applyMove, game, isGameOver, legalDestinations, selectedSquare]);
 
   const chessboardOptions = useMemo<ChessboardOptions>(
     () => ({
@@ -67,6 +131,15 @@ function LocalChessGame({ className = "", initialFen }: LocalChessGameProps) {
       animationDurationInMs: 180,
       allowDragging: !isGameOver,
       allowDrawingArrows: false,
+      squareStyles: {
+        ...(selectedSquare
+          ? { [selectedSquare]: { backgroundColor: "rgba(255, 214, 0, 0.55)" } }
+          : {}),
+        ...Object.fromEntries(
+          legalDestinations.map((square) => [square, { backgroundColor: "rgba(255, 214, 0, 0.38)" }]),
+        ),
+      },
+      onSquareClick: handleSquareClick,
       boardStyle: {
         border: "2px solid var(--color-ink-black)",
         borderRadius: "34px",
@@ -92,27 +165,10 @@ function LocalChessGame({ className = "", initialFen }: LocalChessGameProps) {
           return false;
         }
 
-        const nextGame = new Chess(game.fen());
-
-        try {
-          const move = nextGame.move({
-            from: sourceSquare,
-            to: targetSquare,
-            promotion: "q",
-          });
-
-          setGame(nextGame);
-          setLastMove(`${TURN_LABELS[move.color]} played ${move.san}`);
-          setMoveError(null);
-
-          return true;
-        } catch {
-          setMoveError("Illegal move. Try a legal chess move.");
-          return false;
-        }
+        return applyMove(sourceSquare, targetSquare);
       },
     }),
-    [currentTurn, game, isGameOver],
+    [applyMove, currentTurn, game, handleSquareClick, isGameOver, selectedSquare, legalDestinations],
   );
 
   const rootClassName = ["local-chess-game", className].filter(Boolean).join(" ");
