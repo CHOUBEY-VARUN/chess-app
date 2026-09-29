@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Chess, type Square } from "chess.js";
 import { Chessboard, type ChessboardOptions } from "react-chessboard";
 import {
   createOnlineChessSocket,
@@ -67,6 +68,7 @@ function OnlineChessGame({
 }: OnlineChessGameProps) {
   const socketRef = useRef<OnlineChessSocket | null>(null);
   const [gameState, setGameState] = useState<OnlineGameState | null>(null);
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("connecting");
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -84,11 +86,13 @@ function OnlineChessGame({
 
     socket.on("connect_error", (error) => {
       setConnectionStatus("disconnected");
+      setSelectedSquare(null);
       setConnectionError(error.message || "Could not connect to the game.");
     });
 
     socket.on("disconnect", (reason) => {
       setConnectionStatus("disconnected");
+      setSelectedSquare(null);
 
       if (reason !== "io client disconnect") {
         setConnectionError("Disconnected from the game server.");
@@ -97,28 +101,33 @@ function OnlineChessGame({
 
     socket.on("gameState", (state) => {
       setGameState(state);
+      setSelectedSquare(null);
       setConnectionError(null);
       setMoveError(null);
     });
 
     socket.on("gameOver", (state) => {
       setGameState(state);
+      setSelectedSquare(null);
       setMoveError(null);
     });
 
     socket.on("rematchUpdated", (state) => {
       setGameState(state);
+      setSelectedSquare(null);
       setMoveError(null);
     });
 
     socket.on("rematchStarted", (state) => {
       setGameState(state);
+      setSelectedSquare(null);
       setConnectionError(null);
       setMoveError(null);
     });
 
     socket.on("roomClosed", (payload) => {
       setConnectionError(payload.message);
+      setSelectedSquare(null);
     });
 
     socket.on("redirectToRoom", (payload) => {
@@ -135,6 +144,7 @@ function OnlineChessGame({
 
     socket.on("moveRejected", (error) => {
       setMoveError(error.message);
+      setSelectedSquare(null);
     });
 
     socket.connect();
@@ -153,6 +163,53 @@ function OnlineChessGame({
     gameState && connectionStatus === "connected" && !gameState.isGameOver,
   );
 
+  const legalDestinations = useMemo(() => {
+    if (!gameState || !selectedSquare || !canInteract || !isMyTurn) {
+      return [];
+    }
+
+    const currentPosition = new Chess(gameState.fen);
+    return currentPosition
+      .moves({ square: selectedSquare, verbose: true })
+      .map((move) => move.to);
+  }, [canInteract, gameState, isMyTurn, selectedSquare]);
+
+  const sendMove = useCallback((sourceSquare: string, targetSquare: string) => {
+    if (!gameState || !canInteract || !isMyTurn || !socketRef.current?.connected) {
+      return false;
+    }
+
+    socketRef.current.emit("makeMove", {
+      roomCode,
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: "q",
+    });
+    setSelectedSquare(null);
+    setMoveError(null);
+    return true;
+  }, [canInteract, gameState, isMyTurn, roomCode]);
+
+  const handleSquareClick = useCallback(({ piece, square }: Parameters<NonNullable<ChessboardOptions["onSquareClick"]>>[0]) => {
+    if (!gameState || !canInteract || !isMyTurn) {
+      setSelectedSquare(null);
+      return;
+    }
+
+    if (selectedSquare && legalDestinations.includes(square as Square)) {
+      sendMove(selectedSquare, square);
+      return;
+    }
+
+    if (piece && piece.pieceType[0] === PIECE_COLOR_PREFIX[gameState.playerColor]) {
+      setSelectedSquare(square === selectedSquare ? null : square as Square);
+      setMoveError(null);
+      return;
+    }
+
+    setSelectedSquare(null);
+  }, [canInteract, gameState, isMyTurn, legalDestinations, selectedSquare, sendMove]);
+
   const chessboardOptions = useMemo<ChessboardOptions>(
     () => ({
       id: `online-chess-game-board-${roomCode}`,
@@ -163,6 +220,15 @@ function OnlineChessGame({
       animationDurationInMs: 180,
       allowDragging: canInteract && isMyTurn,
       allowDrawingArrows: false,
+      squareStyles: {
+        ...(selectedSquare
+          ? { [selectedSquare]: { backgroundColor: "rgba(255, 214, 0, 0.55)" } }
+          : {}),
+        ...Object.fromEntries(
+          legalDestinations.map((square) => [square, { backgroundColor: "rgba(255, 214, 0, 0.38)" }]),
+        ),
+      },
+      onSquareClick: handleSquareClick,
       boardStyle: {
         border: "2px solid var(--color-ink-black)",
         borderRadius: "34px",
@@ -207,18 +273,11 @@ function OnlineChessGame({
           return false;
         }
 
-        socketRef.current.emit("makeMove", {
-          roomCode,
-          from: sourceSquare,
-          to: targetSquare,
-          promotion: "q",
-        });
-
-        setMoveError(null);
+        sendMove(sourceSquare, targetSquare);
         return false;
       },
     }),
-    [canInteract, gameState, isMyTurn, roomCode],
+    [canInteract, gameState, handleSquareClick, isMyTurn, roomCode, selectedSquare, legalDestinations, sendMove],
   );
 
   function handleRequestRematch() {
